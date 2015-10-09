@@ -32,10 +32,41 @@ class stream:
 	def getHeatCapacity(self):
 		return int(self.heat_capacity)
 
+class column:
+	def __init__(self,name, fixed_temp, heat, reb_cond,dT):
+		self.name = name
+		self.fixed_temp = fixed_temp
+		self.heat = heat
+		self.type = reb_cond
+		self.dT = dT
+
+		#Determines if Column is a condenser or reboiler
+		if reb_cond == 'reb':
+			self.interface_temp = fixed_temp + self.dT
+			self.heat = self.heat*-1
+		elif reb_cond == 'cond':
+			self.interface_temp = fixed_temp - self.dT
+
+
+	#Look into integrating column into the process class.
+
+
+
 class process:
-	def __init__(self, stream_list):
-		self.stream_list=stream_list
+	def __init__(self, l):
+		self.l = l
+
+		#Lists for Streams and Columns
+		self.stream_list=[]
+		self.column_list = []
+
 		self.temps = []
+
+		for i in range(0,len(self.l)):
+			if isinstance(self.l[i] , column):
+				self.column_list.append(self.l[i])
+			elif isinstance(self.l[i] , stream):
+				self.stream_list.append(self.l[i])
 		
 		#Unique Temperatures
 		for i in self.stream_list:
@@ -58,7 +89,7 @@ class process:
 		#Running through stream Lists (User inputs)
 		for i in self.stream_list:
 
-			#creates ranges
+			
 			if i.hot_cold == "cold":
 				s = set(range(int(i.supply_shift),int(i.target_shift)+1))
 			else:
@@ -110,6 +141,9 @@ class process:
 		for i in range (1,len(self.in_feas_cascade)):
 			if self.in_feas_cascade[self.pinch]>self.in_feas_cascade[i]:
 				self.pinch = i
+
+	def column_in(self):
+		do = "Something"
 
 
 	def final(self):
@@ -172,12 +206,6 @@ class process:
 		plt.title('Grid Diagrams')
 		plt.xlabel('Temperatures (C)')
 		plt.ylabel('Stream #')
-		'''
-		plt.arrow(0, 0, 0.5, 0.5, head_width=0.05, head_length=0.1, fc='k', ec='k')
-		'''
-
-
-
 
 		#Composite Curve (Subplot 3)
 		plt.subplot(2, 2, 3)
