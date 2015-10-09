@@ -49,23 +49,22 @@ p.column_in()
 p.comp_curve()
 
 '''
-Output
+Sample Output
 ____________________________________________________________________________________________________
-Temperatures Ranges:  [185.0, 175.0, 145.0, 110.0, 65.0, 35.0]
-Temperatures Change:  [10.0, 30.0, 35.0, 45.0, 30.0]
-Summation mCp (Net):  [-3.0, -1.0, 3.0, 0.4, 3.4]
-Delta Enthalpy dH:    [-30.0, -30.0, 105.0, 18.0, 102.0]
+Temperatures Ranges:  [165.0, 145.0, 140.0, 85.0, 55.0, 25.0]
+Temperatures Change:  [20.0, 5.0, 55.0, 30.0, 30.0]
+Summation mCp (Net):  [3.0, 0.5, -1.5, 2.5, -0.5]
+Delta Enthalpy dH:    [60.0, 2.5, -82.5, 75.0, -15.0]
 
-INfeasibile Heat Cascade:  [60.0, 30.0, 0.0, 105.0, 123.0, 225.0]
-FEasibile Heat Cascade:      [60.0, 30.0, 0.0, 105.0, 123.0, 225.0]
+INfeasibile Heat Cascade:  [20.0, 80.0, 82.5, 0.0, 75.0, 60.0]
+FEasibile Heat Cascade:      [20.0, 80.0, 82.5, 0.0, 75.0, 60.0]
 
 
-	Min Hot  Utility:   60 kW
-	Min Cold Utility:   225 kW
-	Pinch Temperature:  145 C
+	Min Hot  Utility:   20 kW
+	Min Cold Utility:   60 kW
+	Pinch Temperature:  85 C
 
 ____________________________________________________________________________________________________
 '''
-
 
 
