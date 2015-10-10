@@ -161,9 +161,9 @@ class process:
 			self.integrated_temp_profiles.append(i.shifted_column_temp)
 			self.integrated_temp_profiles.append(i.shifted_column_temp)
 			if i=="cond":
-				print "Condenser Temp: ", i.shifted_column_temp, "Condenser Work: ", i.heat, "kW"
+				print "Condenser Temp: ", i.shifted_column_temp, "Condenser Q: ", i.heat, "kW"
 			else:
-				print "Reboiler Temp: ", i.shifted_column_temp, "Reboiler Temp: ", i.heat, "kW"
+				print "Reboiler Temp: ", i.shifted_column_temp, "Reboiler Q: ", i.heat, "kW"
 
 		self.integrated_temp_profiles.sort()
 		self.integrated_temp_profiles.reverse()
@@ -221,7 +221,7 @@ class process:
 		#Finding the Zeros where the columns are...
 		for i in range(0,self.dH_column):
 			if self.dH_column[i] == 0;
-			
+
 
 
 
