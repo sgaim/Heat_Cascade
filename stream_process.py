@@ -37,21 +37,23 @@ class column:
 		self.name = name
 		self.fixed_temp = fixed_temp
 		self.heat = heat
-		self.type = reb_cond
+		self.reb_cond = reb_cond
 		self.dT = dT
 
 		#Determines if Column is a condenser or reboiler
-		if reb_cond == 'reb':
+		if self.reb_cond == 'reb':
 			self.interface_temp = fixed_temp + self.dT
 			self.heat = self.heat*-1
-		elif reb_cond == 'cond':
+			self.shifted_column_temp=self.fixed_temp + self.dT/2
+		elif self.reb_cond == 'cond':
 			self.interface_temp = fixed_temp - self.dT
+			self.shifted_column_temp=self.fixed_temp - self.dT/2
 
 
 	#Look into integrating column into the process class.
 
 
-
+#Process Class for processing columns and streams
 class process:
 	def __init__(self, l):
 		self.l = l
@@ -62,6 +64,7 @@ class process:
 
 		self.temps = []
 
+		#Seperates the Streams from the Columns
 		for i in range(0,len(self.l)):
 			if isinstance(self.l[i] , column):
 				self.column_list.append(self.l[i])
@@ -124,7 +127,7 @@ class process:
 			self.in_feas_cascade.append(self.in_feas_cascade[counter]+i)
 			counter = counter + 1
 		
-		#Used to DETERMINE least value and pinch
+		#Used to DETERMINE smallest value and pinch
 		self.minimum_value = min(self.in_feas_cascade)
 
 		if self.minimum_value<0:
@@ -132,7 +135,10 @@ class process:
 		
 		#Feasible Cascade
 		self.feas_cascade = self.in_feas_cascade
+
 		for i in range(0,len(self.feas_cascade)):
+			#INFEASIBLE CHANGES HERE FOR SOME REASON...
+			#Determine the reason for the change
 			self.feas_cascade[i] = self.feas_cascade[i] + self.minimum_value
 
 	#Return which temp is the pinch
@@ -142,23 +148,97 @@ class process:
 			if self.in_feas_cascade[self.pinch]>self.in_feas_cascade[i]:
 				self.pinch = i
 
-	def column_in(self):
-		do = "Something"
+
+	def column_int(self):
+		#temps with columns
+		self.integrated_temp_profiles = []
+
+		for i in self.temps:
+			self.integrated_temp_profiles.append(i)
+
+		#Creating unique Temperature profiles
+		for i in self.column_list:
+			self.integrated_temp_profiles.append(i.shifted_column_temp)
+			self.integrated_temp_profiles.append(i.shifted_column_temp)
+			if i=="cond":
+				print "Condenser Temp: ", i.shifted_column_temp, "Condenser Work: ", i.heat, "kW"
+			else:
+				print "Reboiler Temp: ", i.shifted_column_temp, "Reboiler Temp: ", i.heat, "kW"
+
+		self.integrated_temp_profiles.sort()
+		self.integrated_temp_profiles.reverse()
+
+		#Temperature Change
+		self.temp_change_column = []
+		counter = 0
+		while (counter < len(self.integrated_temp_profiles)-1):
+			self.temp_change_column.append(self.integrated_temp_profiles[counter]-self.integrated_temp_profiles[counter+1])
+			counter = counter + 1
+
+		#Sum of Cp's ARRAY with Columns
+		self.sum_cp_columns=[0] * len(self.temp_change_column) #cold-hot
+
+		print '_'*100
+		#Printing out Column Information and adding 
+		print '\nTemps including Column', self.integrated_temp_profiles
+		print 'Temps Change w/ Columns ', self.temp_change_column
+
+		print '_'*100
+
+		for i in self.stream_list:
+			if i.hot_cold == "cold":
+				s = set(range(int(i.supply_shift),int(i.target_shift)+1))
+			else:
+				s = set(range(int(i.target_shift),int(i.supply_shift)+1))
+
+			#Creates subset temp changes (Shift Column Temperatures)
+			for j in range(0,len(self.temp_change_column)):
+
+				#Cretes Subset
+				small_subset = set(range(int(self.integrated_temp_profiles[j+1]),int(self.integrated_temp_profiles[j])+1))
+				small_subset = set(sorted(small_subset))
+				#Subset Function
+				if len(small_subset) == 1:
+					pass
+				if small_subset.issubset(s):
+					self.sum_cp_columns[j]=self.sum_cp_columns[j]+i.heat_capacity
+				else:
+					pass
+
+
+		print "\nSum of Cp: ", self.sum_cp_columns
+
+		for i in range (0, len(self.sum_cp_columns)):
+			self.sum_cp_columns[i]=round(self.sum_cp_columns[i],3)
+
+		#Creating dH Change in Enthalpy
+		self.dH_column=[0] * len(self.temp_change_column) #cold-hot
+		for i in range (0, len(self.sum_cp_columns)):
+			self.dH_column[i] = self.temp_change_column[i]*self.sum_cp_columns[i]
+
+		print self.dH_column
+
+		#Finding the Zeros where the columns are...
+		for i in range(0,self.dH_column):
+			if self.dH_column[i] == 0;
+			
+
+
+
 
 
 	def final(self):
 		print "_"*100
 		print "Temperatures Ranges: ", self.temps
 		print "Temperatures Change: ", self.temp_change
-		print "Summation mCp (Net): ", self.sum_cp
+		print "\nSummation mCp (Net): ", self.sum_cp
 		print "Delta Enthalpy dH:   ", self.dH
 
 
 
 		self.min_HOT_Utility = self.feas_cascade[0]
 		self.min_COLD_Utility = self.feas_cascade[-1]
-		print '\nINfeasibile Heat Cascade: ', self.in_feas_cascade
-		print 'FEasibile Heat Cascade:     ', self.in_feas_cascade
+		print '\nFeasibile Heat Cascade:     ', self.feas_cascade
 
 		print "\n"
 		print "\tMin Hot  Utility:  ", int(self.min_HOT_Utility), "kW"
@@ -167,9 +247,6 @@ class process:
 		print "_"*100
 
 	def comp_curve(self):
-
-		#Creates the figure for the subplots to be added to
-		fig, ax = plt.subplots(2,2)
 		
 		#Grand Composite Curve (Subplot 1)
 		plt.subplot(2, 2, 1)
