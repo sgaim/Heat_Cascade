@@ -40,6 +40,8 @@ class column:
 		self.reb_cond = reb_cond
 		self.dT = dT
 
+		#MAKE SURE TO ORDER COLUMN BASED FROM LARGEST TEMP TO SMALLEST
+
 		#Determines if Column is a condenser or reboiler
 		if self.reb_cond == 'reb':
 			self.interface_temp = fixed_temp + self.dT
@@ -219,8 +221,10 @@ class process:
 		print self.dH_column
 
 		#Finding the Zeros where the columns are...
-		for i in range(0,self.dH_column):
-			if self.dH_column[i] == 0;
+		for i in range(0,len(self.dH_column)):
+			if self.dH_column[i] == 0:
+				pass #for now
+
 
 
 
