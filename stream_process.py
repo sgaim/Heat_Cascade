@@ -29,6 +29,8 @@ class stream:
 			self.supply_shift = self.supply_temp - (self.dT/2)
 			self.target_shift = self.target_temp - (self.dT/2)
 
+		print self.heat_capacity
+
 	def getHeatCapacity(self):
 		return int(self.heat_capacity)
 
@@ -40,7 +42,9 @@ class column:
 		self.reb_cond = reb_cond
 		self.dT = dT
 
+		#-------------------------------------------------------------
 		#MAKE SURE TO ORDER COLUMN BASED FROM LARGEST TEMP TO SMALLEST
+		#-------------------------------------------------------------
 
 		#Determines if Column is a condenser or reboiler
 		if self.reb_cond == 'reb':
@@ -50,9 +54,6 @@ class column:
 		elif self.reb_cond == 'cond':
 			self.interface_temp = fixed_temp - self.dT
 			self.shifted_column_temp=self.fixed_temp - self.dT/2
-
-
-	#Look into integrating column into the process class.
 
 
 #Process Class for processing columns and streams
@@ -72,6 +73,10 @@ class process:
 				self.column_list.append(self.l[i])
 			elif isinstance(self.l[i] , stream):
 				self.stream_list.append(self.l[i])
+
+		#Sort Column List from largest to smallest
+		self.column_list.sort(key=lambda column: column.fixed_temp)
+		self.column_list.reverse()
 		
 		#Unique Temperatures
 		for i in self.stream_list:
@@ -221,9 +226,38 @@ class process:
 		print self.dH_column
 
 		#Finding the Zeros where the columns are...
+		counter = 0
+
 		for i in range(0,len(self.dH_column)):
-			if self.dH_column[i] == 0:
-				pass #for now
+			if self.dH_column[i] == 0.0:
+				self.dH_column[i] = float(self.column_list[counter].heat)
+				counter = counter + 1
+
+		print self.dH_column
+
+		#INfeasible Cascade
+		self.in_feas_cascade = [0]
+		counter = 0
+		for i in self.dH_column:
+			self.in_feas_cascade.append(self.in_feas_cascade[counter]+i)
+			counter = counter + 1
+		
+		#Used to DETERMINE smallest value and pinch
+		minimum_value = min(self.in_feas_cascade)
+
+		if minimum_value<0:
+			minimum_value= minimum_value*-1
+		
+		#Feasible Cascade
+		self.feas_cascade = self.in_feas_cascade
+
+		for i in range(0,len(self.feas_cascade)):
+			#INFEASIBLE CHANGES HERE FOR SOME REASON...
+			#Determine the reason for the change
+			self.feas_cascade[i] = self.feas_cascade[i] + self.minimum_value
+
+
+		print "Newly Column integrated Cascade:",self.feas_cascade
 
 
 
@@ -250,20 +284,20 @@ class process:
 		print "\tPinch Temperature: ", int(self.temps[self.pinch]), "C\n"
 		print "_"*100
 
-	def comp_curve(self):
+	def comp_curve(self,):
 		
 		#Grand Composite Curve (Subplot 1)
 		plt.subplot(2, 2, 1)
 		x_points = self.feas_cascade
-		y_points = self.temps
+		y_points = self.integrated_temp_profiles
+
+		print "x: ", x_points
+		print "y: ", y_points
 
 		plt.plot(x_points, y_points, 'ob-')
 		plt.title('Grand Composite')
 		plt.xlabel('Net Heat Flow (kW)')
 		plt.ylabel('Shifterd Temps (C)')
-
-
-
 
 		#Grid Diagrams (Subplot 2)
 		plt.subplot(2, 2, 2)
@@ -278,10 +312,12 @@ class process:
 			y = [i.name,i.name]
 			if (i.hot_cold == "cold"):
 				plt.plot(x,y,color='b')
+				plt.quiver(i.supply_shift,i.name,-1,0)
 			else:
 				plt.plot(x,y,color='r')
+				plt.quiver(i.supply_shift,i.name,1,0)
 			plt.plot(0,i.name+1)
-			plt.quiver(i.supply_shift,i.name,i.target_shift,i.name)
+			
 
 		
 		plt.title('Grid Diagrams')
@@ -310,4 +346,3 @@ class process:
 		plt.tight_layout()
 		
 		plt.show()
-
