@@ -29,7 +29,6 @@ class stream:
 			self.supply_shift = self.supply_temp - (self.dT/2)
 			self.target_shift = self.target_temp - (self.dT/2)
 
-		print self.heat_capacity
 
 	def getHeatCapacity(self):
 		return int(self.heat_capacity)
@@ -58,8 +57,9 @@ class column:
 
 #Process Class for processing columns and streams
 class process:
-	def __init__(self, l):
+	def __init__(self, l, dT):
 		self.l = l
+		self.dT = dT
 
 		#Lists for Streams and Columns
 		self.stream_list=[]
@@ -156,7 +156,20 @@ class process:
 				self.pinch = i
 
 
+	def comp_curve_info (self):
+		self.cc_hot = []
+		self.cc_cold = []
+
+		for i in self.stream_list:
+			if i.hot_cold == "cold":
+				self.cc_cold.append(i.supply_shift)
+				self.cc_cold.append(i.target_shift)
+			else:
+				self.cc_hot.append(i.supply_shift)
+				self.cc_hot.append(i.target_shift)
+
 	def column_int(self):
+
 		#temps with columns
 		self.integrated_temp_profiles = []
 
@@ -186,11 +199,12 @@ class process:
 		self.sum_cp_columns=[0] * len(self.temp_change_column) #cold-hot
 
 		print '_'*100
+		print "Columns from here on:\n"
 		#Printing out Column Information and adding 
-		print '\nTemps including Column', self.integrated_temp_profiles
-		print 'Temps Change w/ Columns ', self.temp_change_column
+		#print '\nTemps including: ', self.integrated_temp_profiles
+		print 'Temps Change: ', self.temp_change_column
 
-		print '_'*100
+
 
 		for i in self.stream_list:
 			if i.hot_cold == "cold":
@@ -211,6 +225,8 @@ class process:
 					self.sum_cp_columns[j]=self.sum_cp_columns[j]+i.heat_capacity
 				else:
 					pass
+		for i in range(0,len(self.sum_cp_columns)):
+			self.sum_cp_columns[i] = round(self.sum_cp_columns[i],3)
 
 
 		print "\nSum of Cp: ", self.sum_cp_columns
@@ -218,22 +234,37 @@ class process:
 		for i in range (0, len(self.sum_cp_columns)):
 			self.sum_cp_columns[i]=round(self.sum_cp_columns[i],3)
 
+
+		#____________________________________________________________________________________________________
 		#Creating dH Change in Enthalpy
 		self.dH_column=[0] * len(self.temp_change_column) #cold-hot
 		for i in range (0, len(self.sum_cp_columns)):
-			self.dH_column[i] = self.temp_change_column[i]*self.sum_cp_columns[i]
 
-		print self.dH_column
+			#Multiply to get dH from dT and Sum of Cp
+			self.dH_column[i] = round((self.temp_change_column[i]*self.sum_cp_columns[i]),2)
+
+		print "\n\ndH Columns: ",self.dH_column
+		#____________________________________________________________________________________________________
+
 
 		#Finding the Zeros where the columns are...
-		counter = 0
+		counter = 0 
 
+
+		#Printing column list
+		temp = []
+		for i in self.column_list:
+			temp.append(i.heat)
+		print "\nColumn List: ",temp
+
+
+		#Fill in Column kW
 		for i in range(0,len(self.dH_column)):
 			if self.dH_column[i] == 0.0:
 				self.dH_column[i] = float(self.column_list[counter].heat)
 				counter = counter + 1
-
-		print self.dH_column
+			if self.dH_column[i] == 0:
+				pass
 
 		#INfeasible Cascade
 		self.in_feas_cascade = [0]
@@ -245,24 +276,29 @@ class process:
 		#Used to DETERMINE smallest value and pinch
 		minimum_value = min(self.in_feas_cascade)
 
-		if minimum_value<0:
-			minimum_value= minimum_value*-1
-		
-		#Feasible Cascade
-		self.feas_cascade = self.in_feas_cascade
+		print "\n\t\t",minimum_value
 
-		for i in range(0,len(self.feas_cascade)):
+		if minimum_value<=0:
+			minimum_value= minimum_value*(-1)
+
+
+		#Feasible Cascade initial
+		self.feas_cascade_column = self.in_feas_cascade
+
+
+		#Addition of lowest kW
+		for i in range(0,len(self.feas_cascade_column)):
 			#INFEASIBLE CHANGES HERE FOR SOME REASON...
 			#Determine the reason for the change
-			self.feas_cascade[i] = self.feas_cascade[i] + self.minimum_value
+			self.feas_cascade_column[i] = self.feas_cascade_column[i] + minimum_value
 
+		
+		#ROUND(2)
+		for i in range(0,len(self.feas_cascade_column)):
+			self.feas_cascade_column[i] = round(self.feas_cascade_column[i],3)
 
-		print "Newly Column integrated Cascade:",self.feas_cascade
-
-
-
-
-
+		print "Addition of PINCH HERE:\n"
+		print "Newly Column integrated Cascade:",self.feas_cascade_column
 
 
 	def final(self):
@@ -276,7 +312,7 @@ class process:
 
 		self.min_HOT_Utility = self.feas_cascade[0]
 		self.min_COLD_Utility = self.feas_cascade[-1]
-		print '\nFeasibile Heat Cascade:     ', self.feas_cascade
+		print '\nFeasibile Heat Cascade:\t', self.feas_cascade
 
 		print "\n"
 		print "\tMin Hot  Utility:  ", int(self.min_HOT_Utility), "kW"
@@ -284,17 +320,43 @@ class process:
 		print "\tPinch Temperature: ", int(self.temps[self.pinch]), "C\n"
 		print "_"*100
 
-	def comp_curve(self,):
+	def network(self):
+		self.pinch = self.temps[self.pinch]
+		self.hot_pinch = self.pinch + (self.dT)/2
+		self.cold_pinch = self.pinch - (self.dT)/2
+		self.above_below = []
+
+		print "Becareful becuase these calculated temps are INTEGERS NOT FLOATS"
+
+		for i in self.stream_list:
+			if i.hot_cold == "hot":
+				above = i.supply_temp - self.hot_pinch * i.heat_capacity
+				below = self.hot_pinch - i.target_temp * i.heat_capacity
+			elif i.hot_cold == "cold":
+				above = i.target_temp - self.cold_pinch * i.heat_capacity
+				below = self.cold_pinch - i.supply_temp * i.heat_capacity
+			self.above_below.append(str(abs(int(above)))+"/"+str(abs(int(below))))
+
+		print "Above kW / Below kW ",self.above_below
+		print "_"*100
+
+	def comp_curve(self):
 		
 		#Grand Composite Curve (Subplot 1)
 		plt.subplot(2, 2, 1)
-		x_points = self.feas_cascade
-		y_points = self.integrated_temp_profiles
+		plt.grid(True)
+		
+		if len(self.column_list) != 0:
+			y_points = self.integrated_temp_profiles
+			x_points = self.feas_cascade_column
+		else:
+			y_points = self.temps
+			x_points = self.feas_cascade
 
-		print "x: ", x_points
-		print "y: ", y_points
+		print x_points
+		print y_points
 
-		plt.plot(x_points, y_points, 'ob-')
+		plt.plot(x_points, y_points, '*b-')
 		plt.title('Grand Composite')
 		plt.xlabel('Net Heat Flow (kW)')
 		plt.ylabel('Shifterd Temps (C)')
