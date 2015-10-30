@@ -1,88 +1,79 @@
 from Process_python import stream, process, column
+
 def main():
-	
+
+	H_arr = []
+	C_arr = []
+
 	#dT Min
 	dT = 10
 
-	#stream# = (name, suppy_temp,target_temp, heat_capacity,dT)
-
+	'''
+	#Streams
 	stream1 = stream(1,20,135,2,dT)
 	stream2 = stream(2,170,60,3,dT)
 	stream3 = stream(3,80,140,4,dT)
 	stream4 = stream(4,150,30,1.5,dT)
 
-
 	#Columns
 	reb_1 = column('Reboiler_1',150,20,'reb',dT)
 	cond_1 = column('Condensor_1',140,20,'cond',dT)
+	cond_2 = column('Condensor 2',104.5,186.8,'cond',dT)
 
-
-
-	
-	#If you would like to add more streams
-	'''
-	stream5 = stream(5,60,180,3,None,dT)
-	stream6 = stream(6,180,40,2,None,dT)
-	stream7 = stream(7,30,105,2.6,None,dT)
-	stream8 = stream(8,150,40,4,None,dT)
-	'''
-
-	#combine streams into one array
-	streams = [stream1, stream2, stream3, stream4,reb_1,cond_1]
-
-	#Process stream array in the "process" class
-	p = process(streams)
-
-	#Calculates mCp
-	p.mcp()
-
-	#Determines the infeasible and feasible heat cascade
-	p.cascade()
-
-	#Determines the single pinch
-	p.pinch()
-
-	#Prints Nessasary Info about the streams
-	p.final()
-	
-	#integrates columns (Has to be after the feasible unintegrated cascade is determined)
-	p.column_int()
-	
-	#Plots the All three composite curves and Grid Diagrams
-	p.comp_curve()
+	streams = [stream1, stream2, stream3, stream4,reb_1,cond_1,cond_2]
 	
 
 	'''
-	Sample Output:
+	for i in range (10,11):
+		dT = i
+		#stream# = (name, suppy_temp,target_temp, heat_capacity,dT)
+		stream1 = stream(1,35.5,450.0,2.439,dT)
+		stream2 = stream(2,450.0,40.0,2.4417,dT)
+		stream3 = stream(3,40.0,75.0,1.2314,dT)
+		stream4 = stream(4,35.5,20.0,0.5226,dT)
+		stream5 = stream(5,104.5,35.0,0.5252,dT)
+		stream6 = stream(6,129.9,80.3,1.1503,dT)
+		stream7 = stream(7,183.2,80.0,3.25872,dT)
+		stream8 = stream(8,249.3,25.0,.1177,dT)
+		stream9 = stream(9,80.0,25.0,.12727,dT)
 
-	____________________________________________________________________________________________________
-	Temperatures Ranges:  [165.0, 145.0, 140.0, 85.0, 55.0, 25.0]
-	Temperatures Change:  [20.0, 5.0, 55.0, 30.0, 30.0]
+		
+		reb_1 = column('Reboiler 1',129.91,95.0,'reb',dT)
+		cond_1 = column('Condensor 1',35.51,35.7,'cond',dT)
+		reb_2 = column('Reboiler 2',150.31,286.5,'reb',dT)
+		cond_2 = column('Condensor 2',104.51,186.8,'cond',dT)
+		reb_3 = column('Reboiler 3',249.3,2832,'reb',dT)
+		cond_3 = column('Condensor 3',183.21,2552.7,'cond',dT)
 
-	Summation mCp (Net):  [3.0, 0.5, -1.5, 2.5, -0.5]
-	Delta Enthalpy dH:    [60.0, 2.5, -82.5, 75.0, -15.0]
-
-	Feasibile Heat Cascade:      [20.0, 80.0, 82.5, 0.0, 75.0, 60.0]
-
-
-		Min Hot  Utility:   20 kW
-		Min Cold Utility:   60 kW
-		Pinch Temperature:  85 C
-
-	____________________________________________________________________________________________________
-	Reboiler Temp:  155.0 Reboiler Temp:  -20 kW
-	Reboiler Temp:  135.0 Reboiler Temp:  20 kW
-	____________________________________________________________________________________________________
-
-	Temps including Column [165.0, 155.0, 155.0, 145.0, 140.0, 135.0, 135.0, 85.0, 55.0, 25.0]
-	Temps Change w/ Columns  [10.0, 0.0, 10.0, 5.0, 5.0, 0.0, 50.0, 30.0, 30.0]
-	____________________________________________________________________________________________________
-
-	Sum of Cp:  [3, 3, 3, 0.5, -1.5, -1.5, -1.5, 2.5, -0.5]
-	[30.0, 0.0, 30.0, 2.5, -7.5, -0.0, -75.0, 75.0, -15.0]
+		#combine streams into one array
+		streams = [stream1, stream2, stream3, stream4, stream5, stream6, stream7, stream8, stream9,cond_3,reb_3,cond_1, cond_2, reb_1, reb_2] #reb_1,cond_1,cond_2,reb_2,reb_3,cond_3
 
 
-	'''
+		#Process stream array in the "process" class
+		p = process(streams,dT)
+
+		#Calculates mCp
+		p.mcp()
+
+		#Determines the infeasible and feasible heat cascade
+		p.cascade()
+
+		#Determines the single pinch
+		p.pinch()
+
+		#Prints Nessasary Info about the streams
+		p.final()
+		
+		#integrates columns (Has to be after the feasible unintegrated cascade is determined)
+		p.column_int()
+
+		#Shows above and below values for kW needed
+		#p.network()
+		
+		#Plots the All three composite curves and Grid Diagrams
+		p.comp_curve()
+	
 		
 	
 main()
+
