@@ -1,12 +1,51 @@
 from Process_python import stream, process, column
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+
+def plotting(x,y):
+	plt.subplot(2, 2, 1)
+	plt.grid(True)
+
+	plt.plot(x, y, '*b-')
+	plt.axis([0,60,0,3500])
+	plt.title('Grid Diagrams')
+	plt.xlabel('dT min')
+	plt.ylabel('QH')
+
+
+	plt.subplot(2, 2, 2)
+	z = []
+	cc = []
+	for i in x:
+		cc.append(25*10**6/(np.power(i,0.05)))
+	print '\t\t\t',cc
+	for i in y:
+		z.append(i*10800)
+	plt.plot(x, z, '*b-')
+	plt.plot(x, cc, '*b-')
+	plt.title('Grid Diagrams')
+	plt.xlabel('dT min')
+	plt.ylabel('$/year')
+
+
+	plt.subplot(2, 2, 3)
+	s = []
+	for i in range(0,len(y)):
+		s.append(z[i]+cc[i])
+
+	plt.grid(True)
+	plt.plot(x, s, '*b-')
+	plt.xlabel('dT min')
+	plt.ylabel('Summation')
+	plt.show()
 
 def main():
 
-	H_arr = []
-	C_arr = []
+	Qh_arr = []
+	dT_array = []
 
-	#dT Min
-	dT = 10
 
 	'''
 	#Streams
@@ -24,7 +63,7 @@ def main():
 	
 
 	'''
-	for i in range (10,11):
+	for i in range (2,50):
 		dT = i
 		#stream# = (name, suppy_temp,target_temp, heat_capacity,dT)
 		stream1 = stream(1,35.5,450.0,2.439,dT)
@@ -65,15 +104,20 @@ def main():
 		p.final()
 		
 		#integrates columns (Has to be after the feasible unintegrated cascade is determined)
-		p.column_int()
+		z = p.column_int()
 
 		#Shows above and below values for kW needed
 		#p.network()
 		
 		#Plots the All three composite curves and Grid Diagrams
-		p.comp_curve()
-	
-		
-	
+		#p.comp_curve()
+
+		Qh_arr.append(z)
+		dT_array.append(i)
+
+	plotting(dT_array,Qh_arr)
+
+
+
 main()
 
