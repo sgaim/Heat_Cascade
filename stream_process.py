@@ -301,6 +301,15 @@ class process:
 		print "Newly Column integrated Cascade:",self.feas_cascade_column
 
 
+		print '_'*100
+		print '_'*100
+		self.qh_integrated = self.feas_cascade_column[0]
+		return self.qh_integrated
+
+
+	def getQH(self):
+		return self.qh_integrated
+
 	def final(self):
 		print "_"*100
 		print "Temperatures Ranges: ", self.temps
@@ -408,3 +417,5 @@ class process:
 		plt.tight_layout()
 		
 		plt.show()
+
+
