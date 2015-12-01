@@ -2,8 +2,6 @@ from stream_process import stream, process, column
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-
 def plotting(x,y):
 	plt.subplot(2, 2, 1)
 	plt.grid(True)
